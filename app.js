@@ -63,7 +63,6 @@ const galleryItems = [
     description: 'Lighthouse Coast Sea',
   },
 ];
-console.log(galleryItems);
 
 //===================================================
 
@@ -72,8 +71,11 @@ const modal = {
   ref: document.querySelector('.js-lightbox'),
   overlay: document.querySelector('.lightbox__overlay'),
   imgRef: document.querySelector('.lightbox__image'),
-  closeBtn: document.querySelector('.lightbox__button')
+  closeBtn: document.querySelector('[data-action="close-lightbox"]')
 };
+let currentIndex = 0;
+
+//===================================================
 
 const galleryMarkup = createImageGallery (galleryItems);
 imagesListRef.insertAdjacentHTML('beforeend', galleryMarkup);
@@ -95,4 +97,56 @@ function createImageGallery (galleryItems) {
   </li>`;
   })
   .join('');
+};
+
+//===================================================
+
+imagesListRef.addEventListener('click', onImageListClick);
+
+function onImageListClick (event) {
+  event.preventDefault();
+  if (event.target.nodeName !== 'IMG') {
+    return;
+  }
+  window.addEventListener('keydown', onKeyboardButtonPress);
+  modal.closeBtn.addEventListener('click', onCloseModalBtnClick);
+  modal.overlay.addEventListener('click', onCloseModalBtnClick);
+  modal.ref.classList.add('is-open');
+  modal.imgRef.src = event.target.dataset.source;
+  modal.imgRef.alt = event.target.alt;
+
+  galleryItems.forEach(item => {
+    if (item.original === modal.imgRef.src) {
+      currentIndex = galleryItems.indexOf(item);
+    }
+  });
+  
+};
+
+//===================================================
+
+function onCloseModalBtnClick () {
+  window.removeEventListener('keydown', onKeyboardButtonPress);
+  modal.closeBtn.removeEventListener('click', onCloseModalBtnClick);
+  modal.overlay.removeEventListener('click', onCloseModalBtnClick);
+  modal.ref.classList.remove('is-open');
+  modal.imgRef.src = '';
+  modal.imgRef.alt = '';
+};
+
+//===================================================
+
+function onKeyboardButtonPress(event) {
+  if (event.code === 'Escape') {
+    onCloseModalBtnClick();
+  }
+  if (event.code === 'ArrowRight') {
+    currentIndex === galleryItems.length - 1 ? (currentIndex = 0) : currentIndex += 1;
+  }
+  if (event.code === 'ArrowLeft') {
+    currentIndex === 0 ? (currentIndex = galleryItems.length - 1) : currentIndex -= 1;
+  }
+  modal.imgRef.src = galleryItems[currentIndex].original;
+  modal.imgRef.alt = galleryItems[currentIndex].description;
+  console.log(event)
 };
